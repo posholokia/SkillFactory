@@ -77,7 +77,7 @@ def start_play(func):  # начало игры
             print('Эта клетка занята, укажите другую')
             return main()
         else:  # если клетка свободна
-            count, player, who_next = turn(count)[0], turn(count)[1], turn(count)[2]  # запускаем счетчик ходов
+            count, player, who_next = turn(count)  # запускаем счетчик ходов
             area[i][j] = player  # подставляем символ игрока в поле и выводим его на экран
             show(area)
             return main()

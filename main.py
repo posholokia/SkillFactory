@@ -34,45 +34,63 @@ def rules():
     print("--------------------------")
 
 
-def welcome():  # приветствуем игроков и запрашиваем согласие на начало игры или продолжение
+def score(player, score_x, score_0):  # считаем количество побед
+    if player == 'Х':  # если победили крестики
+        score_x += 1
+    if player == '0':  # если победили нолики
+        score_0 += 1
+    print('Счет игры:')
+    print(f'Игрок Х: {score_x}  |  Игрок 0: {score_0}')  # выводим счет на экран
+    return score_x, score_0  # возвращаем счет
+
+
+def welcome(func):  # приветствуем игроков и запрашиваем согласие на начало игры или продолжение
     plays = 0  # 0 - первая игра, приветствуем. 1 - не первая игра, запрашиваем продолжение
-    if plays == 0:
-        plays += 1  # увеличиваем счетчик игр
-        start = input('Готовы начать игру?(y/n): ')
-        if start == 'y' or start == 'Y':
-            start_play(coordinats)  # запускаем функцию начала игры
+    score_x = score_0 = 0  # записываем набранные очки, начальный счет 0-0
+
+    def wrapper():
+        nonlocal plays, score_x, score_0
+        if plays == 0:
+            plays += 1  # увеличиваем счетчик игр
+            start = input('Готовы начать игру?(y/n): ')
+            if start == 'y' or start == 'Y':
+                player = func()  # запускаем функцию начала игры и получаем победителя
+                score_x, score_0 = score(player, score_x, score_0)  # запускаем счет побед и перезаписываем
+                wrapper()  # предлагаем сыграть еще
+            else:
+                print('Сыграем в другой раз :(')
+                return
         else:
-            print('Сыграем в другой раз :(')
-            return
-    else:  # запрашиваем согласие на продолжение после игры
-        start = input('Сыграем еще разок?(y/n): ')
-        if start == 'y' or start == 'Y':
-            start_play(coordinats)
-        else:
-            print('Сыграем в другой раз :(')
-            return
+            start = input('Сыграем еще разок?(y/n): ')
+            if start == 'y' or start == 'Y':
+                player = func()
+                score_x, score_0 = score(player, score_x, score_0)
+                wrapper()
+            else:
+                print('Сыграем в другой раз :(')
+                return
+
+    return wrapper
 
 
-def start_play(func):  # начало игры
+@welcome
+def start_play():  # начало игры
     area = start_area()  # получаем стартовое поле
     show(play_area)
     count = 1  # счетчик ходов
-    player = None  # символ игрока - 0 или Х
+    player = ''  # символ игрока - 0 или Х
     who_next = 'Х'  # кто ходит следующий, первый Х
 
     def main():  # основная игра, запускает функции запроса координат, проверки победителя и счетчик ходов
-        nonlocal area
-        nonlocal count
-        nonlocal player
-        nonlocal who_next
+        nonlocal area, count, player, who_next
         if winner(area):  # проверяем наличие победителя
             print(f'Игрок {player} победил!')  # player - тот кто ходил последним
-            return welcome()  # предлагаем сыграть еще
+            return player  # возвращаем победителя
         if count == 10:  # по достижении 10 хода выводим ничью
             print('Ничья')
-            return welcome()  # предлагаем сыграть еще
+            return ''  # победителя нет, возвращаем пустое значение
         print(f'Ходит игрок {who_next}')  # выводим на экран кто ходит
-        i, j = func()  # получаем координаты игрока
+        i, j = coordinates()  # получаем координаты игрока
         if area[i][j] != ' ':  # не даем заменить уже проставленные Х и 0
             print('Эта клетка занята, укажите другую')
             return main()
@@ -81,6 +99,7 @@ def start_play(func):  # начало игры
             area[i][j] = player  # подставляем символ игрока в поле и выводим его на экран
             show(area)
             return main()
+
     return main()
 
 
@@ -97,7 +116,7 @@ def turn(count):  # счетчик ходов
         return count, player, who_next
 
 
-def coordinats():  # координаты игрока
+def coordinates():  # координаты игрока
     coord = input('Введите координаты клетки: ')
     i, j = coord.zfill(2)[0], coord.zfill(2)[-1]  # дополняем недостающие координаты нулями
     if i.isdigit() and j.isdigit():  # проверяем получили ли мы цифры
@@ -105,10 +124,10 @@ def coordinats():  # координаты игрока
             return int(i), int(j)
         else:  # если координаты выходят за пределы поля
             print('Нужно ввести два числа от 1 до 3, введите повторно')
-            return coordinats()
+            return coordinates()
     else:
         print('Нужно вводить числа')
-        return coordinats()
+        return coordinates()
 
 
 def winner(area):  # проверяем есть ли победитель
@@ -126,4 +145,4 @@ def winner(area):  # проверяем есть ли победитель
 
 
 rules()
-welcome()  # запускаем игру
+start_play()  # запускаем игру
